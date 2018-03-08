@@ -63,7 +63,7 @@ function clean_build_dir() {
 
 function usage () {
 echo "Usage: `basename $0` [--prefix /install_prefix|--build [debug|final]|--clean|--verbose|--libsuffix (32|64)|--help|--clang|--cmakedir /directory|--make
-(gmake|make)|--ccompiler (gcc|cc)|--withstaticlib|--unittesting|--clientunittesting|--withssh1|--withserver]"
+(gmake|make)|--ccompiler (gcc|cc)|--withstaticlib|--unittesting|--clientunittesting|--withssh1|--withserver|--withsymbolversioning]"
     cleanup_and_exit
 }
 
@@ -147,6 +147,9 @@ while test -n "$1"; do
 		;;
 		*-withserver)
 			OPTIONS="${OPTIONS} -DWITH_SERVER=ON"
+		;;
+		*-withsymbolversioning)
+			OPTIONS="${OPTIONS} -DWITH_SYMBOL_VERSIONING=ON"
 		;;
 		----noarg)
 			echo "$ARG does not take an argument"

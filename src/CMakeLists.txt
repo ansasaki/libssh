@@ -275,6 +275,10 @@ if (MINGW)
     set_target_properties(${LIBSSH_SHARED_LIBRARY} PROPERTIES LINK_FLAGS "-Wl,--enable-stdcall-fixup")
 endif ()
 
+if (WITH_SYMBOL_VERSIONING)
+    set_target_properties(${LIBSSH_SHARED_LIBRARY} PROPERTIES LINK_FLAGS
+            "-Wl,--version-script,\"${libssh_SOURCE_DIR}/libssh.map\"")
+endif (WITH_SYMBOL_VERSIONING)
 
 install(
   TARGETS

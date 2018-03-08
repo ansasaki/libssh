@@ -174,5 +174,6 @@ else (WITH_INTERNAL_DOC)
     message(STATUS "Public API documentation generation")
 endif (WITH_INTERNAL_DOC)
 message(STATUS "Benchmarks: ${WITH_BENCHMARKS}")
+message(STATUS "Symbol versioning: ${WITH_SYMBOL_VERSIONING}")
 message(STATUS "********************************************")
 
