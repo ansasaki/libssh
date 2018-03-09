@@ -86,6 +86,11 @@ if (BSD OR SOLARIS OR OSX)
     find_package(Argp)
 endif (BSD OR SOLARIS OR OSX)
 
+# Disable symbol versioning in non UNIX platforms
+if (NOT UNIX)
+  set(WITH_SYMBOL_VERSIONING OFF)
+endif (NOT UNIX)
+
 # config.h checks
 include(ConfigureChecks.cmake)
 configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)

@@ -245,6 +245,13 @@ if (NOT WITH_NACL)
   )
 endif (NOT WITH_NACL)
 
+if (WITH_SYMBOL_VERSIONING)
+  set(libssh_SRCS
+    ${libssh_SRCS}
+    libssh.map
+  )
+endif (WITH_SYMBOL_VERSIONING)
+
 include_directories(
   ${LIBSSH_PUBLIC_INCLUDE_DIRS}
   ${LIBSSH_PRIVATE_INCLUDE_DIRS}
@@ -277,7 +284,7 @@ endif ()
 
 if (WITH_SYMBOL_VERSIONING)
     set_target_properties(${LIBSSH_SHARED_LIBRARY} PROPERTIES LINK_FLAGS
-            "-Wl,--version-script,\"${libssh_SOURCE_DIR}/libssh.map\"")
+            "-Wl,--version-script,\"${libssh_SOURCE_DIR}/src/libssh.map\"")
 endif (WITH_SYMBOL_VERSIONING)
 
 install(
