@@ -243,9 +243,34 @@ include_directories(
   ${LIBSSH_PRIVATE_INCLUDE_DIRS}
 )
 
+if (WITH_SYMBOL_VERSIONING)
+    include(SymbolVersion)
+    file (GLOB ALL_HEADERS "${LIBSSH_PUBLIC_INCLUDE_DIRS}/libssh/*.h")
+    extract_symbols(
+        HEADERS ${ALL_HEADERS}
+        FILTER_PATTERN "LIBSSH_API"
+        OUTPUT_VAR EXTRACTED_SYMBOLS
+    )
+
+    generate_map_file("${PROJECT_NAME}.map"
+        SYMBOLS ${EXTRACTED_SYMBOLS}
+        RELEASE_NAME_VERSION ${PROJECT_NAME}_${LIBRARY_VERSION}
+    )
+
+    set(libssh_SRCS
+      ${libssh_SRCS}
+      ${PROJECT_NAME}.map
+    )
+endif (WITH_SYMBOL_VERSIONING)
+
 add_library(${LIBSSH_SHARED_LIBRARY} SHARED ${libssh_SRCS})
 
 target_link_libraries(${LIBSSH_SHARED_LIBRARY} ${LIBSSH_LINK_LIBRARIES})
+
+if (WITH_SYMBOL_VERSIONING)
+    set_target_properties(${LIBSSH_SHARED_LIBRARY} PROPERTIES LINK_FLAGS
+            "-Wl,--version-script,\"${PROJECT_NAME}.map\"")
+endif (WITH_SYMBOL_VERSIONING)
 
 set_target_properties(
   ${LIBSSH_SHARED_LIBRARY}
