@@ -86,6 +86,15 @@ if (BSD OR SOLARIS OR OSX)
     find_package(Argp)
 endif (BSD OR SOLARIS OR OSX)
 
+# Disable symbol versioning in non UNIX platforms
+if (NOT UNIX)
+  set(WITH_SYMBOL_VERSIONING OFF)
+endif (NOT UNIX)
+
+if (WITH_SYMBOL_VERSIONING)
+    include(SymbolVersion)
+endif (WITH_SYMBOL_VERSIONING)
+
 # config.h checks
 include(ConfigureChecks.cmake)
 configure_file(config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
@@ -174,5 +183,6 @@ else (WITH_INTERNAL_DOC)
     message(STATUS "Public API documentation generation")
 endif (WITH_INTERNAL_DOC)
 message(STATUS "Benchmarks: ${WITH_BENCHMARKS}")
+message(STATUS "Symbol versioning: ${WITH_SYMBOL_VERSIONING}")
 message(STATUS "********************************************")
 
