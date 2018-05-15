@@ -184,5 +184,6 @@ else (WITH_INTERNAL_DOC)
 endif (WITH_INTERNAL_DOC)
 message(STATUS "Benchmarks: ${WITH_BENCHMARKS}")
 message(STATUS "Symbol versioning: ${WITH_SYMBOL_VERSIONING}")
+message(STATUS "Allow ABI break: ${WITH_ABI_BREAK}")
 message(STATUS "********************************************")
 

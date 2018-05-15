@@ -28,9 +28,13 @@ if (NOT AWK)
     message(FATAL_ERROR "Could not find `awk` in PATH.")
 endif (NOT AWK)
 
+if (WITH_ABI_BREAK)
+    set (ABI_BREAK --allow-abi-break)
+endif (WITH_ABI_BREAK)
+
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.map)
     set(SMAP_ARGS
-        update -r ${PROJECT_NAME}_${LIBRARY_VERSION} -o
+        update ${ABI_BREAK} -r ${PROJECT_NAME}_${LIBRARY_VERSION} -o
         ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.map
         ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.map
     )
