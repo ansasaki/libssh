@@ -244,17 +244,24 @@ include_directories(
 )
 
 if (WITH_SYMBOL_VERSIONING)
-    include(SymbolVersion)
+
+    find_package(Smap)
+
     file (GLOB ALL_HEADERS "${LIBSSH_PUBLIC_INCLUDE_DIRS}/libssh/*.h")
-    extract_symbols(
+
+    extract_symbols("${PROJECT_NAME}.symbols"
         HEADERS ${ALL_HEADERS}
         FILTER_PATTERN "LIBSSH_API"
-        OUTPUT_VAR EXTRACTED_SYMBOLS
     )
 
+    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.map")
+        set(old_map "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.map")
+    endif()
+
     generate_map_file("${PROJECT_NAME}.map"
-        SYMBOLS ${EXTRACTED_SYMBOLS}
+        SYMBOLS "${PROJECT_NAME}.symbols"
         RELEASE_NAME_VERSION ${PROJECT_NAME}_${LIBRARY_VERSION}
+        OLD_MAP ${old_map}
     )
 
     set(libssh_SRCS

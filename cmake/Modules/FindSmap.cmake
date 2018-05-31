@@ -7,65 +7,63 @@
 #
 
 #.rst:
-# SymbolVersion
-# -------------
+# FindSmap
+# --------
 #
-# This file provides functions to generate the symbol version script. It uses the
-# ``smap`` tool to generate and update the linker script file. It can be installed
-# by calling::
+# This file provides functions to generate the symbol version script. It uses
+# the ``smap`` tool to generate and update the linker script file. It can be
+# installed by calling::
 #
 #   $ pip install symver-smap
 #
-# The ``function generate_map_file`` generates a symbol version script containing
-# the provided symbols. It defines a custom command which set ``target_name`` as
-# its ``OUTPUT``.
+# The ``function generate_map_file`` generates a symbol version script
+# containing the provided symbols. It defines a custom command which sets
+# ``target_name`` as its ``OUTPUT``.
 #
-# The experimental function ``extract_symbols()`` is provided as a simple parser
-# to extract the symbols from C header files. It simply extracts symbols followed
-# by an opening '``(``'. It is recommended to use a filter pattern to select the
-# lines to be considered.
+# The experimental function ``extract_symbols()`` is provided as a simple
+# parser to extract the symbols from C header files. It simply extracts symbols
+# followed by an opening '``(``'. It is recommended to use a filter pattern to
+# select the lines to be considered. It defines a custom command which sets
+# ``target_name`` as its output.
 #
 # ::
 #
 #   generate_map_file(target_name
 #                     RELEASE_NAME_VERSION release_name
-#                     SYMBOLS symbol [symbol2 ...]
-#                     [OUTPUT_DIR dir]
-#                     [OUTPUT_NAME name]
+#                     SYMBOLS symbols_file
+#                     [OLD_MAP old_map]
 #                     [FINAL]
 #                     [BREAK_ABI]
 #                    )
 #
-# ``target_name``
-#   Required, expects the name of the file to receive the generated symbol version
-#   script. It should be added as a dependency for the library. Use the linker
-#   option ``--version-script filename`` to add the version information to the
-#   symbols when building the library.
+# ``target_name``:
+#   Required, expects the name of the file to receive the generated symbol
+#   version script. It should be added as a dependency for the library. Use the
+#   linker option ``--version-script filename`` to add the version information
+#   to the symbols when building the library.
 #
-# ``RELEASE_NAME_VERSION``
+# ``RELEASE_NAME_VERSION``:
 #   Required, expects a string containing the name and version information to be
 #   added to the symbols in the format ``lib_name_1_2_3``.
 #
-# ``SYMBOLS``
-#   Required, expects a list of symbols to be added to the symbol version script.
+# ``SYMBOLS``:
+#   Required, expects a file containing the list of symbols to be added to the
+#   symbol version script.
 #
-# ``OUTPUT_DIR``
-#   Optional, expects the path to the directory where the generated symbol version
-#   script will be stored. If omitted, ``CMAKE_CURRENT_BINARY_DIR`` will be used
-#   instead.
+# ``OLD_MAP``:
+#   Optional. If given, the new set of symbols will be checked against the
+#   ones contained in the ``old_map`` file and updated properly. If an
+#   incompatible change is detected and ``BREAK_ABI`` is not defined, the build
+#   will fail.
 #
-# ``OUTPUT_NAME``
-#   Optional, expects the name of the file to receive the generated symbol version
-#   script. If omitted, ``target_name`` will be used instead.
-#
-# ``FINAL``
+# ``FINAL``:
 #   Optional. If given, will provide the ``--final`` option to ``smap`` tool,
 #   which will mark the modified release in the symbol version script with a
 #   special comment, preventing later changes. This option should be set when
 #   creating a library release and the resulting map file should be stored with
 #   the source code.
 #
-# ``BREAK_ABI``
+# ``BREAK_ABI``:
 #   Optional. If provided, will use ``smap`` ``--allow-abi-break`` option, which
 #   accepts incompatible changes to the set of symbols. This is necessary if any
 #   previously existing symbol were removed.
@@ -74,7 +72,7 @@
 #
 # .. code-block:: cmake
 #
-#   include(SymbolVersion)
+#   find_package(Smap)
 #   generate_map_file("lib.map"
 #                     RELEASE_NAME_VERSION "lib_1_0_0"
 #                     SYMBOLS "symbol1;symbol2"
@@ -85,40 +83,33 @@
 #
 # ::
 #
-#   extract_symbols(HEADERS header1 [header2 ...]
+#   extract_symbols(target_name
+#                   HEADERS header1 [header2 ...]
 #                   [FILTER_PATTERN pattern]
-#                   [OUTPUT_VAR var]
 #                  )
 #
 # ``HEADERS``:
-#   Expects a list of header files to be parsed
+#   Required, expects a list of header files to be parsed.
 #
 # ``FILTER_PATTERN``:
-#   Expects a string. Only the lines containing the filter pattern will be
-#   considered
+#   Optional, expects a string. Only the lines containing the filter pattern
+#   will be considered.
 #
-# ``OUTPUT_VAR``:
-#   Expects the name of the variable to be set in ``PARENT_SCOPE`` containing the
-#   obtained list of symbols.
-#
-# This command extracts the symbols from the files provided in ``HEADERS`` and put
-# the obtained list in ``var``, which is declared in ``PARENT_SCOPE``. If
-# ``pattern`` is provided, then only the lines containing the string given in
-# ``pattern`` will be considered. If `var`` is not provided the variable
-# ``EXTRACTED_SYMBOLS`` containing the obtained list will be defined in
-# ``PARENT_SCOPE``. It is recommended to use a ``FILTER_PATTERN`` to mark the
-# lines containing exported function declaration, since this function is
-# experimental and can make mistakes when parsing the header files.
+# This command extracts the symbols from the files provided in ``HEADERS`` and
+# write it on the ``target_name`` file. If ``pattern`` is provided, then only
+# the lines containing the string given in ``pattern`` will be considered.
+# It is recommended to use a ``FILTER_PATTERN`` to mark the lines containing
+# exported function declaration, since this function is experimental and can
+# return wrong symbols when parsing the header files.
 #
 # Example:
 #
 # .. code-block:: cmake
 #
 #   include(SymbolVersion)
-#   extract_symbols(
+#   extract_symbols("lib.symbols"
 #     HEADERS "header1.h;header2.h"
 #     FILTER_PATTERN "API_FUNCTION"
-#     OUTPUT_VAR exported_symbols
 #   )
 #
 # Where ``header1.h`` contains::
@@ -131,9 +122,9 @@
 #
 #   int private_func2(int b);
 #
-# Will result in the variable ``exported_symbols`` to hold the list::
+# Will result in a file ``lib.symbols`` containing::
 #
-#   ``exported_func1;exported_func2``
+#   ``exported_func1 exported_func2``
 #
 
 # Search for python which is required
@@ -147,13 +138,14 @@ if (NOT SMAP_EXECUTABLE)
     message(FATAL_ERROR "Could not find `smap` in PATH."
                         " It can be found in PyPI as `symver-smap`"
                         " (try `pip install symver-smap`)")
+else ()
+    set(SMAP_FOUND TRUE)
 endif (NOT SMAP_EXECUTABLE)
 
-function(extract_symbols)
+function(extract_symbols _TARGET_NAME)
 
     set(one_value_arguments
       FILTER_PATTERN
-      OUTPUT_VAR
     )
 
     set(multi_value_arguments
@@ -174,10 +166,11 @@ function(extract_symbols)
         )
     endif()
 
-    # If OUTPUT_VAR is not given, set as "EXTRACTED_SYMBOLS"
-    if (NOT DEFINED _extract_symbols_OUTPUT_VAR)
-        set(_extract_symbols_OUTPUT_VAR EXTRACTED_SYMBOLS)
-    endif()
+    # Set output path
+    get_filename_component(_extract_symbols_OUTPUT_PATH
+      "${CMAKE_CURRENT_BINARY_DIR}/${_TARGET_NAME}"
+      ABSOLUTE
+    )
 
     set(symbols)
     foreach(header ${_extract_symbols_HEADERS})
@@ -211,10 +204,18 @@ function(extract_symbols)
 
         list(APPEND symbols ${extracted_symbols})
     endforeach()
+
     list(REMOVE_DUPLICATES symbols)
 
-    # Put the obtained list in the output variable in PARENT_SCOPE
-    set(${_extract_symbols_OUTPUT_VAR} ${symbols} PARENT_SCOPE)
+    add_custom_command(
+        OUTPUT ${_TARGET_NAME}
+        COMMAND
+          echo ${symbols} > "${_extract_symbols_OUTPUT_PATH}"
+        VERBATIM
+        DEPENDS ${_extract_symbols_HEADERS}
+        COMMENT "Extracting symbols from headers"
+    )
+
 endfunction()
 
 function(generate_map_file _TARGET_NAME)
@@ -226,12 +227,11 @@ function(generate_map_file _TARGET_NAME)
 
     set(one_value_arguments
         RELEASE_NAME_VERSION
-        OUTPUT_DIR
-        OUTPUT_NAME
+        SYMBOLS
+        OLD_MAP
     )
 
     set(multi_value_arguments
-        SYMBOLS
     )
 
     cmake_parse_arguments(_generate_map_file
@@ -242,7 +242,7 @@ function(generate_map_file _TARGET_NAME)
     )
 
     if (NOT DEFINED _generate_map_file_SYMBOLS)
-        message(FATAL_ERROR "No symbols were given. Provide a list of exported symbols."
+        message(FATAL_ERROR "No symbols file provided."
         )
     endif()
 
@@ -252,51 +252,47 @@ function(generate_map_file _TARGET_NAME)
         )
     endif()
 
-    if (NOT DEFINED _generate_map_file_OUTPUT_NAME)
-        set(_generate_map_file_OUTPUT_NAME "${_TARGET_NAME}")
-    endif()
-
-    if (NOT DEFINED _generate_map_file_OUTPUT_DIR)
-      set(_generate_map_file_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
-    endif()
-
     # Set generated map file path
-    get_filename_component(_SMAP_OUTPUT_PATH
-      "${_generate_map_file_OUTPUT_DIR}/${_generate_map_file_OUTPUT_NAME}"
+    get_filename_component(_generate_map_file_OUTPUT_PATH
+      "${CMAKE_CURRENT_BINARY_DIR}/${_TARGET_NAME}"
       ABSOLUTE
     )
 
-    if (EXISTS ${_SMAP_OUTPUT_PATH})
-        set(_SMAP_SUBCOMMAND update)
-        set(_SMAP_UPDATED_MAP ${_SMAP_OUTPUT_PATH})
+    if (EXISTS ${_generate_map_file_OLD_MAP})
+        set(_generate_map_file_SUBCOMMAND update)
+        set(_generate_map_file_UPDATE_MAP ${_generate_map_file_OLD_MAP})
     else ()
-        set(_SMAP_SUBCOMMAND new)
+        set(_generate_map_file_SUBCOMMAND new)
     endif()
 
-    set(_SMAP_ARGS_LIST)
+    set(_generate_map_file_ARGS_LIST)
 
     if (_generate_map_file_FINAL)
-        list(APPEND _SMAP_ARGS_LIST "--final")
+        list(APPEND _generate_map_file_ARGS_LIST "--final")
     endif()
 
     if (_generate_map_file_BREAK_ABI)
-        list(APPEND _SMAP_ARGS_LIST "--allow_abi-break")
+        list(APPEND _generate_map_file_ARGS_LIST "--allow_abi-break")
     endif()
 
-    string(REPLACE ";" " " _SMAP_ARGS "${_SMAP_ARGS_LIST}")
+    string(REPLACE ";" " " _generate_map_file_ARGS
+      "${_generate_map_file_ARGS_LIST}"
+    )
 
-    set(_SMAP_COMMAND ${SMAP_EXECUTABLE} ${_SMAP_SUBCOMMAND} ${_SMAP_ARGS}
+    set(_SMAP_COMMAND ${SMAP_EXECUTABLE} ${_generate_map_file_SUBCOMMAND}
+      ${_generate_map_file_ARGS}
       -r ${_generate_map_file_RELEASE_NAME_VERSION}
-      -o ${_SMAP_OUTPUT_PATH}
-      ${_SMAP_UPDATED_MAP}
+      -o ${_generate_map_file_OUTPUT_PATH} -i ${_generate_map_file_SYMBOLS}
+      ${_generate_map_file_UPDATE_MAP}
     )
 
     add_custom_command(
-        OUTPUT ${_SMAP_OUTPUT_PATH}
+        OUTPUT ${_TARGET_NAME}
         COMMAND
-          echo ${_generate_map_file_SYMBOLS} | ${_SMAP_COMMAND}
+          ${_SMAP_COMMAND}
         VERBATIM
-        DEPENDS ${_generate_map_file_HEADERS}
-        COMMENT "Generating the map ${_SMAP_OUTPUT_PATH}"
+        DEPENDS ${_generate_map_file_SYMBOLS} ${_generate_map_file_UPDATE_MAP}
+        COMMENT "Generating the map ${_TARGET_NAME}"
     )
+
 endfunction()
