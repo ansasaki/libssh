@@ -249,19 +249,40 @@ if (WITH_SYMBOL_VERSIONING)
 
     file (GLOB ALL_HEADERS "${LIBSSH_PUBLIC_INCLUDE_DIRS}/libssh/*.h")
 
+    string(REPLACE " " ";" HEADERS_LIST "${ALL_HEADERS}")
+
+    # Extract the symbols marked as "LIBSSH_API" from the header files
     extract_symbols("${PROJECT_NAME}.symbols"
         HEADERS ${ALL_HEADERS}
         FILTER_PATTERN "LIBSSH_API"
     )
 
-    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.map")
-        set(old_map "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.map")
+    # Set the path to the current map file
+    set(cur_map "${libssh_SOURCE_DIR}/libssh.map")
+
+    if (WITH_FINAL)
+        set(final FINAL)
     endif()
 
+    if (WITH_ABI_BREAK)
+        set(break_abi BREAK_ABI)
+    endif()
+
+    # Generate the symbol version map file
     generate_map_file("${PROJECT_NAME}.map"
         SYMBOLS "${PROJECT_NAME}.symbols"
         RELEASE_NAME_VERSION ${PROJECT_NAME}_${LIBRARY_VERSION}
-        OLD_MAP ${old_map}
+        CURRENT_MAP ${cur_map}
+        ${final}
+        ${break_abi}
+    )
+
+    # Copy the generated map back to the source directory
+    add_custom_target(copy_map ALL
+        COMMAND
+          ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.map ${cur_map}
+        DEPENDS "${PROJECT_NAME}.map"
+        COMMENT "Copying ${PROJECT_NAME}.map to ${cur_map}"
     )
 
     set(libssh_SRCS

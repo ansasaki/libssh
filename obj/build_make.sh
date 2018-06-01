@@ -148,6 +148,9 @@ while test -n "$1"; do
 		*-withoutsymbolversioning)
 			OPTIONS="${OPTIONS} -DWITH_SYMBOL_VERSIONING=OFF"
 		;;
+		*-finalrelease)
+			OPTIONS="${OPTIONS} -DWITH_FINAL=ON"
+		;;
 		----noarg)
 			echo "$ARG does not take an argument"
 			cleanup_and_exit

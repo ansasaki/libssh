@@ -26,12 +26,15 @@
 # select the lines to be considered. It defines a custom command which sets
 # ``target_name`` as its output.
 #
+# Functions provided
+# ------------------
+#
 # ::
 #
 #   generate_map_file(target_name
 #                     RELEASE_NAME_VERSION release_name
 #                     SYMBOLS symbols_file
-#                     [OLD_MAP old_map]
+#                     [CURRENT_MAP cur_map]
 #                     [FINAL]
 #                     [BREAK_ABI]
 #                    )
@@ -50,9 +53,9 @@
 #   Required, expects a file containing the list of symbols to be added to the
 #   symbol version script.
 #
-# ``OLD_MAP``:
+# ``CURRENT_MAP``:
 #   Optional. If given, the new set of symbols will be checked against the
-#   ones contained in the ``old_map`` file and updated properly. If an
+#   ones contained in the ``cur_map`` file and updated properly. If an
 #   incompatible change is detected and ``BREAK_ABI`` is not defined, the build
 #   will fail.
 #
@@ -106,7 +109,7 @@
 #
 # .. code-block:: cmake
 #
-#   include(SymbolVersion)
+#   find_package(Smap)
 #   extract_symbols("lib.symbols"
 #     HEADERS "header1.h;header2.h"
 #     FILTER_PATTERN "API_FUNCTION"
@@ -124,7 +127,7 @@
 #
 # Will result in a file ``lib.symbols`` containing::
 #
-#   ``exported_func1 exported_func2``
+#   ``exported_func1;exported_func2``
 #
 
 # Search for python which is required
@@ -141,6 +144,10 @@ if (NOT SMAP_EXECUTABLE)
 else ()
     set(SMAP_FOUND TRUE)
 endif (NOT SMAP_EXECUTABLE)
+
+# Define helper scripts
+set(_EXTRACT_SYMBOLS_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/ExtractSymbols.cmake)
+set(_GENERATE_MAP_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/GenerateMap.cmake)
 
 function(extract_symbols _TARGET_NAME)
 
@@ -172,48 +179,16 @@ function(extract_symbols _TARGET_NAME)
       ABSOLUTE
     )
 
-    set(symbols)
-    foreach(header ${_extract_symbols_HEADERS})
-        # Filter only lines containing the FILTER_PATTERN
-        file(STRINGS ${header} contain_filter
-          REGEX "^.*${_extract_symbols_FILTER_PATTERN}.*[(]"
-        )
-
-        # Remove function-like macros
-        foreach(line ${contain_filter})
-            if (NOT ${line} MATCHES ".*#[ ]*define")
-                list(APPEND not_macro ${line})
-            endif()
-        endforeach()
-
-        set(functions)
-
-        # Get only the function names followed by '('
-        foreach(line ${not_macro})
-            string(REGEX MATCHALL "[a-zA-Z0-9_]+[ ]*[(]" function ${line})
-            list(APPEND functions ${function})
-        endforeach()
-
-        set(extracted_symbols)
-
-        # Remove '('
-        foreach(line ${functions})
-            string(REGEX REPLACE "[(]" "" symbol ${line})
-            list(APPEND extracted_symbols ${symbol})
-        endforeach()
-
-        list(APPEND symbols ${extracted_symbols})
-    endforeach()
-
-    list(REMOVE_DUPLICATES symbols)
-
     add_custom_command(
         OUTPUT ${_TARGET_NAME}
-        COMMAND
-          echo ${symbols} > "${_extract_symbols_OUTPUT_PATH}"
-        VERBATIM
+        COMMAND ${CMAKE_COMMAND}
+          -DOUTPUT_PATH="${_extract_symbols_OUTPUT_PATH}"
+          -DHEADERS="${_extract_symbols_HEADERS}"
+          -DFILTER_PATTERN=${_extract_symbols_FILTER_PATTERN}
+          -P ${_EXTRACT_SYMBOLS_SCRIPT}
         DEPENDS ${_extract_symbols_HEADERS}
-        COMMENT "Extracting symbols from headers"
+        COMMENT
+          "Extracting symbols from headers"
     )
 
 endfunction()
@@ -228,7 +203,7 @@ function(generate_map_file _TARGET_NAME)
     set(one_value_arguments
         RELEASE_NAME_VERSION
         SYMBOLS
-        OLD_MAP
+        CURRENT_MAP
     )
 
     set(multi_value_arguments
@@ -258,41 +233,18 @@ function(generate_map_file _TARGET_NAME)
       ABSOLUTE
     )
 
-    if (EXISTS ${_generate_map_file_OLD_MAP})
-        set(_generate_map_file_SUBCOMMAND update)
-        set(_generate_map_file_UPDATE_MAP ${_generate_map_file_OLD_MAP})
-    else ()
-        set(_generate_map_file_SUBCOMMAND new)
-    endif()
-
-    set(_generate_map_file_ARGS_LIST)
-
-    if (_generate_map_file_FINAL)
-        list(APPEND _generate_map_file_ARGS_LIST "--final")
-    endif()
-
-    if (_generate_map_file_BREAK_ABI)
-        list(APPEND _generate_map_file_ARGS_LIST "--allow_abi-break")
-    endif()
-
-    string(REPLACE ";" " " _generate_map_file_ARGS
-      "${_generate_map_file_ARGS_LIST}"
-    )
-
-    set(_SMAP_COMMAND ${SMAP_EXECUTABLE} ${_generate_map_file_SUBCOMMAND}
-      ${_generate_map_file_ARGS}
-      -r ${_generate_map_file_RELEASE_NAME_VERSION}
-      -o ${_generate_map_file_OUTPUT_PATH} -i ${_generate_map_file_SYMBOLS}
-      ${_generate_map_file_UPDATE_MAP}
-    )
-
     add_custom_command(
         OUTPUT ${_TARGET_NAME}
-        COMMAND
-          ${_SMAP_COMMAND}
-        VERBATIM
-        DEPENDS ${_generate_map_file_SYMBOLS} ${_generate_map_file_UPDATE_MAP}
+        COMMAND ${CMAKE_COMMAND}
+          -DSMAP_EXECUTABLE=${SMAP_EXECUTABLE}
+          -DSYMBOLS="${_generate_map_file_SYMBOLS}"
+          -DCURRENT_MAP=${_generate_map_file_CURRENT_MAP}
+          -DOUTPUT_PATH="${_generate_map_file_OUTPUT_PATH}"
+          -DFINAL=${_generate_map_file_FINAL}
+          -DBREAK_ABI=${_generate_map_file_BREAK_ABI}
+          -DRELEASE_NAME_VERSION=${_generate_map_file_RELEASE_NAME_VERSION}
+          -P ${_GENERATE_MAP_SCRIPT}
+        DEPENDS ${_generate_map_file_SYMBOLS}
         COMMENT "Generating the map ${_TARGET_NAME}"
     )
-
 endfunction()
