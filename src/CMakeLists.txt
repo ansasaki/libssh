@@ -18,6 +18,7 @@ if (WIN32)
     ${LIBSSH_LINK_LIBRARIES}
     ws2_32
   )
+  add_definitions(-D_WIN32)
 endif (WIN32)
 
 if (HAVE_LIBSOCKET)
@@ -164,9 +165,27 @@ set(libssh_SRCS
   external/sc25519.c
 )
 
+if (CMAKE_USE_PTHREADS_INIT)
+    set(libssh_SRCS
+        ${libssh_SRCS}
+        threads/pthread.c
+    )
+elseif (WIN32)
+    set(libssh_SRCS
+        ${libssh_SRCS}
+        threads/winlocks.c
+    )
+else()
+    set(libssh_SRCS
+        ${libssh_SRCS}
+        threads/noop.c
+    )
+endif()
+
 if (WITH_GCRYPT)
     set(libssh_SRCS
         ${libssh_SRCS}
+        threads/gcrypt.c
         libgcrypt.c
         gcrypt_missing.c
         pki_gcrypt.c
@@ -175,6 +194,7 @@ if (WITH_GCRYPT)
 elseif (WITH_MBEDTLS)
     set(libssh_SRCS
         ${libssh_SRCS}
+        threads/mbedtls.c
         libmbedcrypto.c
         mbedcrypto_missing.c
         pki_mbedcrypto.c
@@ -183,6 +203,7 @@ elseif (WITH_MBEDTLS)
 else (WITH_GCRYPT)
     set(libssh_SRCS
         ${libssh_SRCS}
+        threads/libcrypto.c
         pki_crypto.c
         ecdh_crypto.c
         libcrypto.c
@@ -326,7 +347,7 @@ if (WITH_STATIC_LIB)
   )
 endif (WITH_STATIC_LIB)
 
-message(STATUS "Threads_FOUND=${Threads_FOUND}")
-if (Threads_FOUND)
-    add_subdirectory(threads)
-endif (Threads_FOUND)
+#message(STATUS "Threads_FOUND=${Threads_FOUND}")
+#if (Threads_FOUND)
+#    add_subdirectory(threads)
+#endif (Threads_FOUND)
