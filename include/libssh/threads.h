@@ -36,6 +36,29 @@
 # define SSH_STATIC_MUTEX_UNLOCK(mutex) \
     pthread_mutex_unlock(&mutex)
 
+#elif defined(HAVE_WINLOCKS)
+
+#include <windows.h>
+#include <WinBase.h>
+
+/* Copied from GnuTLS code (lib/locks.h) */
+# define SSH_STATIC_MUTEX(mutex) \
+    static CRITICAL_SECTION *mutex = NULL
+
+# define SSH_STATIC_MUTEX_LOCK(mutex) \
+    if (mutex == NULL) { \
+        CRITICAL_SECTION *mutex##tmp = malloc(sizeof(CRITICAL_SECTION)); \
+        InitializeCriticalSection(mutex##tmp); \
+        if (InterlockedCompareExchangePointer((PVOID*)&mutex, (PVOID)mutex##tmp, NULL) != NULL) { \
+            DeleteCriticalSection(mutex##tmp); \
+            free(mutex##tmp); \
+        } \
+    } \
+    EnterCriticalSection(mutex)
+
+# define SSH_STATIC_MUTEX_UNLOCK(mutex) \
+    LeaveCriticalSection(mutex)
+
 #else
 
 # define SSH_STATIC_MUTEX(mutex)
