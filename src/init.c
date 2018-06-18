@@ -35,27 +35,6 @@
 # define _CONSTRUCTOR __attribute__((constructor))
 # define _DESTRUCTOR __attribute__((destructor))
 
-#ifdef HAVE_PTHREAD
-
-# include <pthread.h>
-
-#define SSH_STATIC_MUTEX(mutex) \
-    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER
-
-# define SSH_STATIC_MUTEX_LOCK(mutex) \
-    pthread_mutex_lock(&mutex)
-
-# define SSH_STATIC_MUTEX_UNLOCK(mutex) \
-    pthread_mutex_unlock(&mutex)
-
-#else /* HAVE_PTHREAD */
-
-# define SSH_STATIC_MUTEX(mutex)
-# define SSH_STATIC_MUTEX_LOCK(mutex)
-# define SSH_STATIC_MUTEX_UNLOCK(mutex)
-
-#endif /* HAVE_PTHREAD */
-
 SSH_STATIC_MUTEX(ssh_init_mutex);
 
 /* Counter for initializations */

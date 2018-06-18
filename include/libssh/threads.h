@@ -24,6 +24,26 @@
 #include <libssh/libssh.h>
 #include <libssh/callbacks.h>
 
+#ifdef HAVE_PTHREAD
+
+#include <pthread.h>
+#define SSH_STATIC_MUTEX(mutex) \
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER
+
+# define SSH_STATIC_MUTEX_LOCK(mutex) \
+    pthread_mutex_lock(&mutex)
+
+# define SSH_STATIC_MUTEX_UNLOCK(mutex) \
+    pthread_mutex_unlock(&mutex)
+
+#else
+
+# define SSH_STATIC_MUTEX(mutex)
+# define SSH_STATIC_MUTEX_LOCK(mutex)
+# define SSH_STATIC_MUTEX_UNLOCK(mutex)
+
+#endif
+
 int ssh_threads_init(void);
 void ssh_threads_finalize(void);
 const char *ssh_threads_get_type(void);
