@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include "libssh/threads.h"
 #include <libssh/callbacks.h>
 
 #ifdef HAVE_PTHREAD
@@ -47,31 +48,31 @@
  */
 
 static int ssh_pthread_mutex_init (void **priv){
-  int err = 0;
-  *priv = malloc (sizeof (pthread_mutex_t));
-  if (*priv==NULL)
-    return ENOMEM;
-  err = pthread_mutex_init (*priv, NULL);
-  if (err != 0){
-    free (*priv);
-    *priv=NULL;
-  }
-  return err;
+    int err = 0;
+    *priv = malloc (sizeof (pthread_mutex_t));
+    if (*priv == NULL)
+        return ENOMEM;
+    err = pthread_mutex_init (*priv, NULL);
+    if (err != 0){
+        free (*priv);
+        *priv = NULL;
+    }
+    return err;
 }
 
 static int ssh_pthread_mutex_destroy (void **lock) {
-  int err = pthread_mutex_destroy (*lock);
-  free (*lock);
-  *lock=NULL;
-  return err;
+    int err = pthread_mutex_destroy (*lock);
+    free (*lock);
+    *lock = NULL;
+    return err;
 }
 
 static int ssh_pthread_mutex_lock (void **lock) {
-  return pthread_mutex_lock (*lock);
+    return pthread_mutex_lock (*lock);
 }
 
 static int ssh_pthread_mutex_unlock (void **lock){
-  return pthread_mutex_unlock (*lock);
+    return pthread_mutex_unlock (*lock);
 }
 
 static unsigned long ssh_pthread_thread_id (void){
@@ -84,16 +85,20 @@ static unsigned long ssh_pthread_thread_id (void){
 
 static struct ssh_threads_callbacks_struct ssh_threads_pthread =
 {
-		.type="threads_pthread",
-    .mutex_init=ssh_pthread_mutex_init,
-    .mutex_destroy=ssh_pthread_mutex_destroy,
-    .mutex_lock=ssh_pthread_mutex_lock,
-    .mutex_unlock=ssh_pthread_mutex_unlock,
-    .thread_id=ssh_pthread_thread_id
+    .type = "threads_pthread",
+    .mutex_init = ssh_pthread_mutex_init,
+    .mutex_destroy = ssh_pthread_mutex_destroy,
+    .mutex_lock = ssh_pthread_mutex_lock,
+    .mutex_unlock = ssh_pthread_mutex_unlock,
+    .thread_id = ssh_pthread_thread_id
 };
 
 struct ssh_threads_callbacks_struct *ssh_threads_get_pthread(void) {
-	return &ssh_threads_pthread;
+    return &ssh_threads_pthread;
+}
+
+struct ssh_threads_callbacks_struct *ssh_threads_get_default(void) {
+    return &ssh_threads_pthread;
 }
 
 #endif /* HAVE_PTHREAD */
