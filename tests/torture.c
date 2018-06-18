@@ -27,13 +27,18 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/socket.h>
 #include <fcntl.h>
 #include <signal.h>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#endif
 
 #ifndef _WIN32
 # include <dirent.h>
 # include <errno.h>
+# include <sys/socket.h>
 #endif
 
 #ifdef HAVE_UNISTD_H
