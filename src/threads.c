@@ -39,26 +39,30 @@ static struct ssh_threads_callbacks_struct *user_callbacks = NULL;
  * @brief inits the threading with the backend cryptographic libraries
  */
 
-int ssh_threads_init(void){
-    static int threads_initialized=0;
+int ssh_threads_init(void) {
+    static int threads_initialized = 0;
     int ret;
-    if(threads_initialized)
+
+    if (threads_initialized) {
         return SSH_OK;
+    }
+
     /* first initialize the user_callbacks with our default handlers if not
      * already the case
      */
-    if(user_callbacks == NULL){
+    if (user_callbacks == NULL){
         user_callbacks = ssh_threads_get_default();
     }
 
     /* Then initialize the crypto libraries threading callbacks */
     ret = crypto_thread_init(user_callbacks);
-    if(ret == SSH_OK)
-        threads_initialized=1;
-  return ret;
+    if (ret == SSH_OK) {
+        threads_initialized = 1;
+    }
+    return ret;
 }
 
-void ssh_threads_finalize(void){
+void ssh_threads_finalize(void) {
     crypto_thread_finalize();
 }
 
@@ -68,8 +72,9 @@ int ssh_threads_set_callbacks(struct ssh_threads_callbacks_struct *cb){
 }
 
 const char *ssh_threads_get_type(void) {
-    if(user_callbacks != NULL)
+    if (user_callbacks != NULL) {
         return user_callbacks->type;
+    }
     return NULL;
 }
 
