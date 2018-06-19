@@ -28,48 +28,31 @@
 
 #include <pthread.h>
 #define SSH_STATIC_MUTEX(mutex) \
-    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER
-
-# define SSH_STATIC_MUTEX_LOCK(mutex) \
-    pthread_mutex_lock(&mutex)
-
-# define SSH_STATIC_MUTEX_UNLOCK(mutex) \
-    pthread_mutex_unlock(&mutex)
+    static pthread_mutex_t mutex
 
 #elif defined(HAVE_WINLOCKS)
 
 #include <windows.h>
 #include <WinBase.h>
-
-/* Copied from GnuTLS code (lib/locks.h) */
 # define SSH_STATIC_MUTEX(mutex) \
     static CRITICAL_SECTION *mutex = NULL
 
-# define SSH_STATIC_MUTEX_LOCK(mutex) \
-    if (mutex == NULL) { \
-        CRITICAL_SECTION *mutex##tmp = malloc(sizeof(CRITICAL_SECTION)); \
-        InitializeCriticalSection(mutex##tmp); \
-        if (InterlockedCompareExchangePointer((PVOID*)&mutex, (PVOID)mutex##tmp, NULL) != NULL) { \
-            DeleteCriticalSection(mutex##tmp); \
-            free(mutex##tmp); \
-        } \
-    } \
-    EnterCriticalSection(mutex)
-
-# define SSH_STATIC_MUTEX_UNLOCK(mutex) \
-    LeaveCriticalSection(mutex)
-
 #else
 
-# define SSH_STATIC_MUTEX(mutex)
-# define SSH_STATIC_MUTEX_LOCK(mutex)
-# define SSH_STATIC_MUTEX_UNLOCK(mutex)
+# define SSH_STATIC_MUTEX(mutex) \
+    static void *mutex
 
 #endif
 
 int ssh_threads_init(void);
 void ssh_threads_finalize(void);
 const char *ssh_threads_get_type(void);
+
+void ssh_static_mutex_init(void **mutex);
+void ssh_mutex_init(void **mutex);
+void ssh_mutex_lock(void **mutex);
+void ssh_mutex_unlock(void **mutex);
+void ssh_mutex_destroy(void **mutex);
 
 struct ssh_threads_callbacks_struct *ssh_threads_get_default(void);
 int crypto_thread_init(struct ssh_threads_callbacks_struct *user_callbacks);

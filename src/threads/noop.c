@@ -42,6 +42,33 @@ static struct ssh_threads_callbacks_struct ssh_threads_noop =
     threads_id_noop
 };
 
+/* Threads interface implementation */
+
+static int ssh_static_mutex_init (void **lock){
+    (void)lock;
+  return 0;
+}
+
+static int ssh_mutex_init (void **lock){
+    (void)lock;
+  return 0;
+}
+
+static int ssh_mutex_lock (void **lock){
+    (void)lock;
+  return 0;
+}
+
+static int ssh_mutex_unlock (void **lock){
+    (void)lock;
+  return 0;
+}
+
+static int ssh_mutex_destroy (void **lock){
+    (void)lock;
+  return 0;
+}
+
 struct ssh_threads_callbacks_struct *ssh_threads_get_noop(void) {
     return &ssh_threads_noop;
 }

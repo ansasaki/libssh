@@ -35,6 +35,7 @@
 # define _CONSTRUCTOR __attribute__((constructor))
 # define _DESTRUCTOR __attribute__((destructor))
 
+/* Declare static mutex */
 SSH_STATIC_MUTEX(ssh_init_mutex);
 
 /* Counter for initializations */
@@ -48,7 +49,7 @@ static int _ssh_init(unsigned constructor) {
     int rc = 0;
 
     if (!constructor) {
-        SSH_STATIC_MUTEX_LOCK(ssh_init_mutex);
+        ssh_mutex_lock((void **)&ssh_init_mutex);
     }
 
     _ssh_initialized++;
@@ -77,7 +78,7 @@ _ret:
     _ssh_init_ret = rc;
 
     if (!constructor) {
-        SSH_STATIC_MUTEX_UNLOCK(ssh_init_mutex);
+        ssh_mutex_unlock((void **)&ssh_init_mutex);
     }
 
     return rc;
@@ -93,6 +94,8 @@ _ret:
 static void _CONSTRUCTOR auto_init(void) {
 
     int rc;
+
+    ssh_static_mutex_init((void **)&ssh_init_mutex);
 
     rc = _ssh_init(1);
 
@@ -129,7 +132,7 @@ int ssh_init(void) {
 static int _ssh_finalize(unsigned destructor) {
 
     if (!destructor) {
-        SSH_STATIC_MUTEX_LOCK(ssh_init_mutex);
+        ssh_mutex_lock((void **)&ssh_init_mutex);
     }
 
     if (_ssh_initialized == 1) {
@@ -154,7 +157,7 @@ static int _ssh_finalize(unsigned destructor) {
 
 _ret:
     if (!destructor) {
-        SSH_STATIC_MUTEX_UNLOCK(ssh_init_mutex);
+        ssh_mutex_unlock((void **)&ssh_init_mutex);
     }
     return 0;
 }

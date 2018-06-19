@@ -28,24 +28,6 @@
 #include <WinBase.h>
 #include <errno.h>
 
-/** @brief Defines the needed callbacks for pthread. Use this if your
- * OS supports libpthread and want to use it for threading.
- * @code
- * #include <libssh/callbacks.h>
- * #include <errno.h>
- * #include <pthread.h>
- * SSH_THREADS_PTHREAD(ssh_pthread_callbacks);
- * int main(){
- *   ssh_init_set_threads_callbacks(&ssh_pthread_callbacks);
- *   ssh_init();
- *   ...
- * }
- * @endcode
- * @param name name of the structure to be declared, containing the
- * callbacks for threading
- *
- */
-
 static int ssh_winlock_mutex_init (void **priv) {
   CRITICAL_SECTION *lock = malloc(sizeof(CRITICAL_SECTION));
 
@@ -61,19 +43,19 @@ static int ssh_winlock_mutex_init (void **priv) {
 }
 
 static int ssh_winlock_mutex_destroy (void **lock) {
-  DeleteCriticalSection((CRITICAL_SECTION *) * priv);
-  free(*priv);
+  DeleteCriticalSection((CRITICAL_SECTION *) *lock);
+  free(*lock);
 
   return 0;
 }
 
 static int ssh_winlock_mutex_lock (void **lock) {
-  EnterCriticalSection((CRITICAL_SECTION *) * priv);
+  EnterCriticalSection((CRITICAL_SECTION *) *lock);
   return 0;
 }
 
 static int ssh_winlock_mutex_unlock (void **lock){
-  LeaveCriticalSection((CRITICAL_SECTION *) * priv);
+  LeaveCriticalSection((CRITICAL_SECTION *) *lock);
   return 0;
 }
 
@@ -90,6 +72,94 @@ static struct ssh_threads_callbacks_struct ssh_threads_winlock =
     .mutex_unlock = ssh_winlock_mutex_unlock,
     .thread_id = ssh_winlock_thread_id
 };
+
+/* Threads interface implementation */
+
+void ssh_static_mutex_init(void **mutex) {
+     PVOID *rc = NULL;
+
+    CRITICAL_SECTION *mutex_tmp = NULL;
+
+    if (mutex == NULL) {
+        exit(EINVAL);
+    }
+
+    if (*mutex == NULL) {
+        mutex_tmp = malloc(sizeof(CRITICAL_SECTION));
+
+        if (mutex_tmp = NULL) {
+            exit(ENOMEM);
+        }
+
+        InitializeCriticalSection(mutex_tmp);
+
+        rc = InterlockedCompareExchangePointer((PVOID*)mutex,
+                                               (PVOID)mutex_tmp,
+                                               NULL);
+        if (rc != NULL) {
+            DeleteCriticalSection(mutex_tmp);
+            free(mutex_tmp);
+        }
+    }
+
+    EnterCriticalSection(*mutex)
+}
+
+void ssh_mutex_init(void **mutex) {
+    int rc;
+
+    if (mutex == NULL) {
+        exit(EINVAL);
+    }
+
+    rc = ssh_winlock_mutex_init(mutex);
+
+    if (rc) {
+        exit(rc);
+    }
+}
+
+void ssh_mutex_lock(void **mutex) {
+    int rc;
+
+    if (mutex == NULL) {
+        exit(EINVAL);
+    }
+
+    rc = ssh_winlock_mutex_lock(mutex);
+
+    if (rc) {
+        exit(rc);
+    }
+}
+
+void ssh_mutex_unlock(void **mutex) {
+    int rc;
+
+    if (mutex == NULL) {
+        exit(EINVAL);
+    }
+
+    rc = ssh_winlock_mutex_unlock(mutex);
+
+    if (rc) {
+        exit(rc);
+    }
+}
+
+void ssh_mutex_destroy(void **mutex) {
+    int rc;
+
+    if (mutex == NULL) {
+        exit(EINVAL);
+    }
+
+    rc = ssh_winlock_mutex_destroy(mutex);
+
+    if (rc) {
+        exit(rc);
+    }
+}
 
 struct ssh_threads_callbacks_struct *ssh_threads_get_winlock(void) {
   return &ssh_threads_winlock;
