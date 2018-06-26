@@ -32,4 +32,10 @@ set(pkd_libs
 add_executable(pkd_hello ${pkd_hello_src})
 target_link_libraries(pkd_hello ${pkd_libs})
 
+set_target_properties(pkd_hello PROPERTIES COMPILE_FLAGS
+"-pthread")
+
+set_target_properties(pkd_hello PROPERTIES LINK_FLAGS
+"-pthread")
+
 endif (WITH_SERVER AND UNIX AND NOT WIN32)
