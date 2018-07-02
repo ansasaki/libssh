@@ -52,4 +52,12 @@ endif ()
 message(STATUS "PKD_ENVIRONMENT=${PKD_ENVIRONMENT}")
 set_property(TEST pkd_hello_i1 PROPERTY ENVIRONMENT ${PKD_ENVIRONMENT})
 
+if (CMAKE_USE_PTHREADS_INIT)
+    set_target_properties(pkd_hello PROPERTIES COMPILE_FLAGS
+    "-pthread")
+
+    set_target_properties(pkd_hello PROPERTIES LINK_FLAGS
+    "-pthread")
+endif()
+
 endif (WITH_SERVER AND UNIX AND NOT WIN32)

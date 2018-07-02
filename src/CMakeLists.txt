@@ -167,6 +167,18 @@ set(libssh_SRCS
   chachapoly.c
 )
 
+if (CMAKE_USE_PTHREADS_INIT)
+    set(libssh_SRCS
+        ${libssh_SRCS}
+        threads/pthread.c
+    )
+else()
+    set(libssh_SRCS
+        ${libssh_SRCS}
+        threads/noop.c
+    )
+endif()
+
 if (WITH_GCRYPT)
     set(libssh_SRCS
         ${libssh_SRCS}
