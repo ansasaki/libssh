@@ -172,6 +172,11 @@ if (CMAKE_USE_PTHREADS_INIT)
         ${libssh_SRCS}
         threads/pthread.c
     )
+elseif (WIN32)
+    set(libssh_SRCS
+        ${libssh_SRCS}
+        threads/winlocks.c
+    )
 else()
     set(libssh_SRCS
         ${libssh_SRCS}

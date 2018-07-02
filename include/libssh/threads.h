@@ -30,6 +30,13 @@
 #define SSH_STATIC_MUTEX(mutex) \
     static pthread_mutex_t mutex
 
+#elif defined(HAVE_WINLOCKS)
+
+#include <windows.h>
+#include <WinBase.h>
+# define SSH_STATIC_MUTEX(mutex) \
+    static CRITICAL_SECTION *mutex = NULL
+
 #else
 
 # define SSH_STATIC_MUTEX(mutex) \
