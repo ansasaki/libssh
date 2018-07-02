@@ -317,8 +317,3 @@ if (WITH_STATIC_LIB)
       libraries
   )
 endif (WITH_STATIC_LIB)
-
-message(STATUS "Threads_FOUND=${Threads_FOUND}")
-if (Threads_FOUND)
-    add_subdirectory(threads)
-endif (Threads_FOUND)

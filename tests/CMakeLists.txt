@@ -22,13 +22,6 @@ set(TORTURE_LINK_LIBRARIES
     ${LIBSSH_STATIC_LIBRARY}
     ${LIBSSH_LINK_LIBRARIES})
 
-if (LIBSSH_THREADS)
-    set(TORTURE_LINK_LIBRARIES
-        ${TORTURE_LINK_LIBRARIES}
-        ${LIBSSH_THREADS_STATIC_LIBRARY}
-        ${LIBSSH_THREADS_LINK_LIBRARIES})
-endif (LIBSSH_THREADS)
-
 # create test library
 add_library(${TORTURE_LIBRARY}
             STATIC
@@ -43,6 +36,10 @@ if (ARGP_LIBRARY)
     target_link_libraries(${TORTURE_LIBRARY}
         ${ARGP_LIBRARY}
     )
+endif()
+
+if (CMAKE_USE_PTHREADS_INIT)
+    target_link_libraries(${TORTURE_LIBRARY} "-pthread")
 endif()
 
 set(TEST_TARGET_LIBRARIES
