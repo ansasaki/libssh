@@ -182,6 +182,7 @@ endif()
 if (WITH_GCRYPT)
     set(libssh_SRCS
         ${libssh_SRCS}
+        threads/libgcrypto.c
         libgcrypt.c
         gcrypt_missing.c
         pki_gcrypt.c
@@ -190,6 +191,7 @@ if (WITH_GCRYPT)
 elseif (WITH_MBEDTLS)
     set(libssh_SRCS
         ${libssh_SRCS}
+        threads/mbedtls.c
         libmbedcrypto.c
         mbedcrypto_missing.c
         pki_mbedcrypto.c
@@ -198,6 +200,7 @@ elseif (WITH_MBEDTLS)
 else (WITH_GCRYPT)
     set(libssh_SRCS
         ${libssh_SRCS}
+        threads/libcrypto.c
         pki_crypto.c
         ecdh_crypto.c
         libcrypto.c
