@@ -12,6 +12,14 @@ add_cmocka_test(torture_config torture_config.c ${TORTURE_LIBRARY})
 add_cmocka_test(torture_options torture_options.c ${TORTURE_LIBRARY})
 add_cmocka_test(torture_isipaddr torture_isipaddr.c ${TORTURE_LIBRARY})
 add_cmocka_test(torture_knownhosts_parsing torture_knownhosts_parsing.c ${TORTURE_LIBRARY})
+
+if (CMAKE_USE_PTHREADS_INIT)
+    add_cmocka_test(torture_rand torture_rand.c ${TORTURE_LIBRARY})
+    add_cmocka_test(torture_threads_init torture_threads_init.c ${TORTURE_LIBRARY})
+    add_cmocka_test(torture_threads_buffer torture_threads_buffer.c ${TORTURE_LIBRARY})
+    add_cmocka_test(torture_threads_crypto torture_threads_crypto.c ${TORTURE_LIBRARY})
+endif ()
+
 if (UNIX AND NOT WIN32)
     # this uses a socketpair
     add_cmocka_test(torture_packet torture_packet.c ${TORTURE_LIBRARY})
@@ -33,10 +41,6 @@ if (UNIX AND NOT WIN32)
     add_cmocka_test(torture_channel torture_channel.c ${TORTURE_LIBRARY})
     # requires pthread
     if (CMAKE_USE_PTHREADS_INIT)
-        add_cmocka_test(torture_rand torture_rand.c ${TORTURE_LIBRARY})
-        add_cmocka_test(torture_threads_init torture_threads_init.c ${TORTURE_LIBRARY})
-        add_cmocka_test(torture_threads_buffer torture_threads_buffer.c ${TORTURE_LIBRARY})
-        add_cmocka_test(torture_threads_crypto torture_threads_crypto.c ${TORTURE_LIBRARY})
         add_cmocka_test(torture_threads_pki_rsa torture_threads_pki_rsa.c ${TORTURE_LIBRARY})
         # Not working correctly
         #if (WITH_SERVER)
