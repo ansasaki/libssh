@@ -36,6 +36,7 @@ if (UNIX AND NOT WIN32)
         add_cmocka_test(torture_rand torture_rand.c ${TORTURE_LIBRARY})
         add_cmocka_test(torture_threads_init torture_threads_init.c ${TORTURE_LIBRARY})
         add_cmocka_test(torture_threads_buffer torture_threads_buffer.c ${TORTURE_LIBRARY})
+        add_cmocka_test(torture_threads_crypto torture_threads_crypto.c ${TORTURE_LIBRARY})
         # Not working correctly
         #if (WITH_SERVER)
         #    add_cmocka_test(torture_server_x11 torture_server_x11.c ${TORTURE_LIBRARY})
