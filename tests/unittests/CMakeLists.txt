@@ -34,6 +34,7 @@ if (UNIX AND NOT WIN32)
     # requires pthread
     if (CMAKE_USE_PTHREADS_INIT)
         add_cmocka_test(torture_rand torture_rand.c ${TORTURE_LIBRARY})
+        add_cmocka_test(torture_threads_init torture_threads_init.c ${TORTURE_LIBRARY})
         # Not working correctly
         #if (WITH_SERVER)
         #    add_cmocka_test(torture_server_x11 torture_server_x11.c ${TORTURE_LIBRARY})
