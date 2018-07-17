@@ -243,9 +243,62 @@ include_directories(
   ${LIBSSH_PRIVATE_INCLUDE_DIRS}
 )
 
+if (WITH_SYMBOL_VERSIONING)
+
+    find_package(Smap)
+
+    file (GLOB ALL_HEADERS "${LIBSSH_PUBLIC_INCLUDE_DIRS}/libssh/*.h")
+
+    string(REPLACE " " ";" HEADERS_LIST "${ALL_HEADERS}")
+
+    # Extract the symbols marked as "LIBSSH_API" from the header files
+    extract_symbols("${PROJECT_NAME}.symbols"
+        HEADERS ${ALL_HEADERS}
+        FILTER_PATTERN "LIBSSH_API"
+    )
+
+    # Set the path to the current map file
+    set(cur_map "${libssh_SOURCE_DIR}/libssh.map")
+
+    if (WITH_FINAL)
+        set(final FINAL)
+    endif()
+
+    if (WITH_ABI_BREAK)
+        set(break_abi BREAK_ABI)
+    endif()
+
+    # Generate the symbol version map file
+    generate_map_file("${PROJECT_NAME}.map"
+        SYMBOLS "${PROJECT_NAME}.symbols"
+        RELEASE_NAME_VERSION ${PROJECT_NAME}_${LIBRARY_VERSION}
+        CURRENT_MAP ${cur_map}
+        ${final}
+        ${break_abi}
+    )
+
+    # Copy the generated map back to the source directory
+    add_custom_target(copy_map ALL
+        COMMAND
+          ${CMAKE_COMMAND} -E copy ${PROJECT_NAME}.map ${cur_map}
+        DEPENDS "${PROJECT_NAME}.map"
+        COMMENT "Copying ${PROJECT_NAME}.map to ${cur_map}"
+    )
+
+    set(libssh_SRCS
+      ${libssh_SRCS}
+      ${PROJECT_NAME}.map
+    )
+endif (WITH_SYMBOL_VERSIONING)
+
 add_library(${LIBSSH_SHARED_LIBRARY} SHARED ${libssh_SRCS})
 
 target_link_libraries(${LIBSSH_SHARED_LIBRARY} ${LIBSSH_LINK_LIBRARIES})
+
+if (WITH_SYMBOL_VERSIONING)
+    set_target_properties(${LIBSSH_SHARED_LIBRARY} PROPERTIES LINK_FLAGS
+            "-Wl,--version-script,\"${PROJECT_NAME}.map\"")
+endif (WITH_SYMBOL_VERSIONING)
 
 set_target_properties(
   ${LIBSSH_SHARED_LIBRARY}
