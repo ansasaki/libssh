@@ -476,7 +476,7 @@ int ssh_select(ssh_channel *channels, ssh_channel *outchannels, socket_t maxfd,
     fd_set *readfds, struct timeval *timeout) {
   fd_set origfds;
   socket_t fd;
-  int i,j;
+  unsigned int i,j;
   int rc;
   int base_tm, tm;
   struct ssh_timestamp ts;
@@ -512,7 +512,7 @@ int ssh_select(ssh_channel *channels, ssh_channel *outchannels, socket_t maxfd,
       }
     }
     outchannels[j] = NULL;
-    if(j != 0)
+    if(j > 0)
       break;
     /* watch if a user socket was triggered */
     for (fd = 0; fd < maxfd; fd++) {
